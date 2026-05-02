@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Pokémon - Statistiques</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <nav>
+        <a href="/">Liste</a>
+        <a href="/search">Recherche</a>
+        <a href="/stats">Statistiques</a>
+    </nav>
+    {% if error %}<div class="error">{{ error }}</div>{% endif %}
+    <h1>Statistiques Pokémon</h1>
+    <section><h2>Top 10 des Pokémon les plus puissants</h2>
+        <table><tr><th>Position</th><th>Nom</th><th>Type 1</th><th>Génération</th><th>Total stats</th></tr>
+        {% for pokemon in top_pokemons %}
+        <tr><td>{{ loop.index }}</td><td>{{ pokemon.get('name', '') }}</td><td>{{ pokemon.get('type_1', '') }}</td><td>{{ pokemon.get('generation', '') }}</td><td>{{ pokemon.get('base_stat_total', '') }}</td></tr>
+        {% endfor %}</table>
+    </section>
+    <section><h2>Nombre de Pokémon par type principal</h2>
+        <table><tr><th>Type principal</th><th>Nombre de Pokémon</th></tr>
+        {% for item in types %}
+        <tr><td>{{ item.get('_id', 'Inconnu') }}</td><td>{{ item.get('total', 0) }}</td></tr>
+        {% endfor %}</table>
+    </section>
+</body>
+</html>

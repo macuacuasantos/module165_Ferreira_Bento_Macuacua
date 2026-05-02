@@ -1,0 +1,15 @@
+services:
+  app:
+    build: .
+    container_name: app_module165_pokemon
+    ports:
+      - "5000:5000"
+    environment:
+      # Connexion à MongoDB installé sur le PC Windows hôte.
+      # Si votre serveur MongoDB utilise l'authentification, utilisez plutôt :
+      # mongodb://userModify:userModify!@host.docker.internal:27017/my_data_Ferreira_Bento_Macuacua?authSource=my_data_Ferreira_Bento_Macuacua
+      MONGO_URI: "mongodb://host.docker.internal:27017/"
+      MONGO_DB: "my_data_Ferreira_Bento_Macuacua"
+      MONGO_COLLECTION: "open_data"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
