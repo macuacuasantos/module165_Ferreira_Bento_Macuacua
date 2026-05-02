@@ -1,15 +1,27 @@
 services:
+  mongo:
+    image: mongo:7
+    container_name: mongo_module165
+    attach: false
+    volumes:
+      - mongo_data:/data/db
+      - ../1_open_data_Ferreira_Bento_Macuacua.json:/docker-entrypoint-initdb.d/open_data.json:ro
+      - ../1_my_team_Ferreira_Bento_Macuacua.json:/docker-entrypoint-initdb.d/my_team.json:ro
+      - ./init-db.sh:/docker-entrypoint-initdb.d/init-db.sh:ro
+
   app:
     build: .
     container_name: app_module165_pokemon
     ports:
-      - "5000:5000"
+      - "${APP_PORT:-5001}:5001"
     environment:
-      # Connexion à MongoDB installé sur le PC Windows hôte.
-      # Si votre serveur MongoDB utilise l'authentification, utilisez plutôt :
-      # mongodb://userModify:userModify!@host.docker.internal:27017/my_data_Ferreira_Bento_Macuacua?authSource=my_data_Ferreira_Bento_Macuacua
-      MONGO_URI: "mongodb://host.docker.internal:27017/"
+      MONGO_URI: "mongodb://mongo:27017/"
       MONGO_DB: "my_data_Ferreira_Bento_Macuacua"
       MONGO_COLLECTION: "open_data"
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
+      PUBLIC_PORT: "${APP_PORT:-5001}"
+      PYTHONUNBUFFERED: "1"
+    depends_on:
+      - mongo
+
+volumes:
+  mongo_data:

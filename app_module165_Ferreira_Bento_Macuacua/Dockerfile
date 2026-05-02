@@ -7,6 +7,8 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 COPY . .
 
-EXPOSE 5000
+RUN chmod +x entrypoint.sh
 
-CMD ["python", "app.py"]
+EXPOSE 5001
+
+CMD ["./entrypoint.sh"]
