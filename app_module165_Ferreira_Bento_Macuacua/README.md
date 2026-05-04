@@ -18,6 +18,9 @@ app_module165_Ferreira_Bento_Macuacua/
 ├── requirements.txt
 ├── Dockerfile
 ├── docker-compose.yml
+├── entrypoint.sh
+├── init-db.sh
+├── .env.example
 ├── README.md
 ├── static/
 │   └── style.css
@@ -40,40 +43,28 @@ app_module165_Ferreira_Bento_Macuacua/
 ### 1. Liste des Pokémon
 La page d'accueil affiche les 50 premiers Pokémon de la collection `open_data`.
 
-URL : `http://127.0.0.1:5000/`
+URL : `http://127.0.0.1:5001/`
 
 ### 2. Recherche et filtre
 La page de recherche permet de filtrer les Pokémon :
 - par nom,
 - par type principal (`type_1`).
 
-URL : `http://127.0.0.1:5000/search`
+URL : `http://127.0.0.1:5001/search`
 
 ### 3. Statistiques et classement
 La page de statistiques affiche :
 - le top 10 des Pokémon les plus puissants selon `base_stat_total`,
 - le nombre de Pokémon par type principal.
 
-URL : `http://127.0.0.1:5000/stats`
+URL : `http://127.0.0.1:5001/stats`
 
 ---
 
 # Option 1 - Installation avec Docker
 
 ## Prérequis
-Installer Docker Desktop sur Windows 11.
-
-Le serveur MongoDB standalone doit être lancé sur le PC et la base suivante doit exister :
-
-```text
-my_data_Ferreira_Bento_Macuacua
-```
-
-La collection suivante doit aussi exister :
-
-```text
-open_data
-```
+Installer Docker Desktop sur Windows 11. Aucune installation de MongoDB nécessaire.
 
 ## Lancement avec Docker Compose
 
@@ -83,33 +74,80 @@ Depuis le dossier de l'application :
 docker compose up --build
 ```
 
+Docker démarre automatiquement :
+- Un conteneur **MongoDB** qui importe les données Pokémon au premier démarrage
+- Un conteneur **Flask** qui attend que MongoDB soit prêt avant de démarrer
+
 Ouvrir ensuite le navigateur :
 
 ```text
-http://127.0.0.1:5000
+http://127.0.0.1:5001
 ```
 
-## Configuration MongoDB sans authentification
+## Premier lancement vs relances
 
-Dans `docker-compose.yml`, la configuration par défaut est :
+Au **premier lancement**, MongoDB importe automatiquement les données via `init-db.sh`. Les relances suivantes utilisent le volume persistant — l'import ne se répète pas.
 
-```yaml
-MONGO_URI: "mongodb://host.docker.internal:27017/"
-MONGO_DB: "my_data_Ferreira_Bento_Macuacua"
-MONGO_COLLECTION: "open_data"
+Pour repartir de zéro (réimporter les données) :
+
+```bash
+docker compose down -v
+docker compose up --build
 ```
 
-`host.docker.internal` permet au conteneur Docker d'accéder au MongoDB installé sur le PC Windows.
+## Changer le port (optionnel)
 
-## Configuration MongoDB avec authentification
+Si le port `5001` est déjà utilisé sur votre machine, créez un fichier `.env` à partir du modèle :
 
-Si MongoDB utilise l'authentification, remplacer `MONGO_URI` dans `docker-compose.yml` par :
-
-```yaml
-MONGO_URI: "mongodb://userModify:userModify@host.docker.internal:27017/my_data_Ferreira_Bento_Macuacua?authSource=my_data_Ferreira_Bento_Macuacua"
+```bash
+cp .env.example .env
 ```
 
-Adapter le mot de passe si nécessaire.
+Puis modifiez `APP_PORT` dans `.env` :
+
+```env
+APP_PORT=5002
+```
+
+L'application sera alors accessible sur `http://127.0.0.1:5002`.
+
+## Logs MongoDB masqués
+
+Les logs de MongoDB sont masqués par défaut. Si ils apparaissent quand même (version Docker Compose < 2.22), utiliser cette commande à la place :
+
+```bash
+docker compose up --attach app
+```
+
+## Interagir avec les conteneurs
+
+### MongoDB — ouvrir mongosh
+```bash
+docker exec -it mongo_module165 mongosh
+```
+
+Exemples de requêtes une fois dans mongosh :
+```js
+use my_data_Ferreira_Bento_Macuacua
+db.open_data.findOne()
+db.open_data.countDocuments()
+db.my_team.find()
+```
+
+### MongoDB — logs
+```bash
+docker logs mongo_module165
+```
+
+### Application Flask — ouvrir un shell
+```bash
+docker exec -it app_module165_pokemon sh
+```
+
+### Application Flask — logs
+```bash
+docker logs app_module165_pokemon
+```
 
 ## Arrêter l'application Docker
 
@@ -156,7 +194,7 @@ python app.py
 Ouvrir ensuite :
 
 ```
-http://127.0.0.1:5000
+http://127.0.0.1:5001
 ```
 
 ## Variables d'environnement disponibles
